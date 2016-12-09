@@ -102,7 +102,9 @@ class RunVC: ChildVC, MKMapViewDelegate, RunDelegate {
     
     func addOverlays() {
         let locations = RunModel.runModel.locations
-        for i in 0 ..< (locations?.count)! - 1 {
+        let count = locations?.count ?? 0
+        let maxIndex = (count > 0) ? (count - 1) : 0
+        for i in 0 ..< maxIndex {
             var coords: [CLLocationCoordinate2D] = [locations![i].coordinate, locations![i + 1].coordinate]
             map.add(MKPolyline(coordinates: &coords, count: 2))
             
