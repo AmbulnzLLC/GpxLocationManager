@@ -11,25 +11,29 @@ import UIKit
 
 class PanSegue: UIStoryboardSegue {
     override func perform() {
-        let firstVCView = self.sourceViewController.view as UIView!
-        let secondVCView = self.destinationViewController.view as UIView!
-        let screenWidth = UIScreen.mainScreen().bounds.size.width
-        let screenHeight = UIScreen.mainScreen().bounds.size.height
-        secondVCView.frame = CGRectMake(screenWidth, 0, screenWidth, screenHeight)
+        let firstVCView = self.source.view
+        let secondVCView = self.destination.view
+        let screenWidth = UIScreen.main.bounds.size.width
+        let screenHeight = UIScreen.main.bounds.size.height
+        secondVCView?.frame = CGRect(x: screenWidth, y: 0, width: screenWidth, height: screenHeight)
         // secondVCView.transform = CGAffineTransformRotate(secondVCView.transform, CGFloat(M_PI))
 
-        let window = UIApplication.sharedApplication().keyWindow
+        let window = UIApplication.shared.keyWindow
         // Swizzle to avoid spurious call to viewWillAppear().
-        method_exchangeImplementations(class_getInstanceMethod(destinationViewController.classForCoder, "viewWillAppear:"), class_getInstanceMethod(UIViewController.classForCoder(), "viewWillAppearNoOp:"))
-        window?.insertSubview(secondVCView, aboveSubview: firstVCView)
+        method_exchangeImplementations(class_getInstanceMethod(destination.classForCoder, #selector(UIViewController.viewWillAppear(_:))), class_getInstanceMethod(UIViewController.classForCoder(), Selector(("viewWillAppearNoOp:"))))
+        window?.insertSubview(secondVCView!, aboveSubview: firstVCView!)
         // Unswizzle.
-        method_exchangeImplementations(class_getInstanceMethod(UIViewController.classForCoder(), "viewWillAppearNoOp:"), class_getInstanceMethod(destinationViewController.classForCoder, "viewWillAppear:"))
-        UIView.animateWithDuration(UiConstants.panDuration, animations: { () -> Void in
-            firstVCView.frame = CGRectOffset(firstVCView.frame, -screenWidth, 0)
-            secondVCView.frame = CGRectOffset(secondVCView.frame, -screenWidth, 0)
-            }) { (Finished) -> Void in
-                self.sourceViewController.presentViewController(self.destinationViewController , animated: false, completion: nil)
-        }
+        method_exchangeImplementations(class_getInstanceMethod(UIViewController.classForCoder(), Selector(("viewWillAppearNoOp:"))), class_getInstanceMethod(destination.classForCoder, #selector(UIViewController.viewWillAppear(_:))))
+        UIView.animate(withDuration: UiConstants.panDuration, animations: { () -> Void in
+            if let f = firstVCView {
+                f.frame = f.frame.offsetBy(dx: -screenWidth, dy: 0)
+            }
+            if let s = secondVCView {
+                s.frame = s.frame.offsetBy(dx: -screenWidth, dy: 0)
+            }
+            }, completion: { (Finished) -> Void in
+                self.source.present(self.destination , animated: false, completion: nil)
+        }) 
     }
 }
 
